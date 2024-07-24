@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import koreanize_matplotlib
 
 # 데이터 로드
-file_path = '성씨ㆍ본관별_인구__시군구_20240724114945 (1).xlsx'
+file_path = '20240724114945.xlsx'
 data = pd.read_excel(file_path)
 
 # 데이터 정리
