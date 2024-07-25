@@ -40,17 +40,17 @@ if surname:
         st.write(f"지역: {selected_region}, 성씨: {surname} 인구 데이터")
         st.dataframe(region_surname_data.reset_index(drop=True))
 
-        # 전국 대비 해당 지역 성씨 비율 그래프
+        # 전국 대비 해당 지역 성씨 비율 그래프 (꺾은선 그래프)
         fig, ax = plt.subplots(figsize=(10, 6))
-        bars = ax.bar(['전국', selected_region], [total_surname_data['인구수'].values[0], region_surname_data['인구수'].values[0]], color=['blue', 'green'])
+        ax.plot(['전국', selected_region], [total_surname_data['인구수'].values[0], region_surname_data['인구수'].values[0]], marker='o', linestyle='-', color='blue', label='인구수')
         ax.set_ylabel('인구수')
         ax.set_title(f"{surname} 성씨 전국 대비 {selected_region} 인구수")
-        
+        ax.legend()
+
         # 그래프에 레이블 추가
-        for bar in bars:
-            yval = bar.get_height()
-            ax.text(bar.get_x() + bar.get_width()/2, yval + 5000, int(yval), ha='center', va='bottom')
-        
+        for i, txt in enumerate([total_surname_data['인구수'].values[0], region_surname_data['인구수'].values[0]]):
+            ax.annotate(txt, (['전국', selected_region][i], txt), textcoords="offset points", xytext=(0,10), ha='center')
+
         st.pyplot(fig)
     else:
         st.write(f"지역 '{selected_region}'에서 성씨 '{surname}'의 데이터를 찾을 수 없습니다.")
