@@ -49,15 +49,16 @@ if surname:
         # 모든 지역에 대한 입력된 성씨의 인구수 데이터 준비
         regions_surname_data = total_surname_data[total_surname_data['지역'] != '전국'].groupby('지역').sum().reset_index()
         
-        # 전국의 해당 성씨 총 인구수
-        total_surname_population = total_surname_data[total_surname_data['지역'] == '전국']['인구수'].values[0]
-        
-        # 전국 대비 해당 지역 성씨 비율 그래프 (꺾은선 그래프)
+        # 각 한자별 인구수를 계산하고 그래프에 추가
+        unique_chars = set(char for name in total_surname_data['성씨'] for char in name if char.isalnum())
         fig, ax = plt.subplots(figsize=(14, 7))
-        ax.plot(regions_surname_data['지역'], regions_surname_data['인구수'], marker='o', linestyle='-', color='blue', label='지역별 인구수')
         
-        # 전국 성씨 인구수 선
-        ax.axhline(y=total_surname_population, color='red', linestyle='--', label=f'전국 {surname} 성씨 인구수')
+        for char in unique_chars:
+            char_total_population = total_surname_data[total_surname_data['성씨'].str.contains(char, na=False)]['인구수'].sum()
+            ax.axhline(y=char_total_population, linestyle='--', label=f'전국 {char} 성씨 인구수')
+        
+        # 지역별 인구수 꺾은선 그래프 추가
+        ax.plot(regions_surname_data['지역'], regions_surname_data['인구수'], marker='o', linestyle='-', color='blue', label='지역별 인구수')
         
         ax.set_ylabel('인구수')
         ax.set_xlabel('지역')
@@ -68,9 +69,11 @@ if surname:
         for i, txt in enumerate(regions_surname_data['인구수']):
             ax.annotate(txt, (regions_surname_data['지역'][i], txt), textcoords="offset points", xytext=(0,10), ha='center')
         
-        # 전국 성씨 인구수 레이블 추가
-        ax.annotate(total_surname_population, (1, total_surname_population), textcoords="offset points", xytext=(-10,10), ha='center', color='red')
-        
+        # 각 한자별 인구수 레이블 추가
+        for char in unique_chars:
+            char_total_population = total_surname_data[total_surname_data['성씨'].str.contains(char, na=False)]['인구수'].sum()
+            ax.annotate(char_total_population, (1, char_total_population), textcoords="offset points", xytext=(-10,10), ha='center')
+
         st.pyplot(fig)
     else:
         st.write(f"지역 '{selected_region}' 또는 전국에서 성씨 '{surname}'의 데이터를 찾을 수 없습니다.")
