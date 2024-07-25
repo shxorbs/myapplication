@@ -36,41 +36,44 @@ surname = st.text_input('성씨를 입력하세요:')
 
 # 선택한 성씨에 대한 데이터 필터링 및 전국 인구수 계산
 if surname:
+    # 지역 데이터에서 입력한 성씨의 데이터 필터링
     region_surname_data = region_data[region_data['성씨'].str.contains(surname, na=False)]
+    
+    # 전국 데이터에서 입력한 성씨의 데이터 필터링
     total_surname_data = data[data['성씨'].str.contains(surname, na=False)]
-
-    if not region_surname_data.empty:
+    
+    if not region_surname_data.empty and not total_surname_data.empty:
         st.write(f"지역: {selected_region}, 성씨: {surname} 인구 데이터")
         st.dataframe(region_surname_data.reset_index(drop=True))
-
+        
         # 모든 지역에 대한 입력된 성씨의 인구수 데이터 준비
-        regions_surname_data = data[data['성씨'].str.contains(surname, na=False) & (data['지역'] != '전국')].groupby('지역').sum().reset_index()
-
+        regions_surname_data = total_surname_data[total_surname_data['지역'] != '전국'].groupby('지역').sum().reset_index()
+        
         # 전국의 해당 성씨 총 인구수
-        total_surname_population = total_surname_data['인구수'].sum()
-
+        total_surname_population = total_surname_data[total_surname_data['지역'] == '전국']['인구수'].values[0]
+        
         # 전국 대비 해당 지역 성씨 비율 그래프 (꺾은선 그래프)
         fig, ax = plt.subplots(figsize=(14, 7))
         ax.plot(regions_surname_data['지역'], regions_surname_data['인구수'], marker='o', linestyle='-', color='blue', label='지역별 인구수')
-
+        
         # 전국 성씨 인구수 선
         ax.axhline(y=total_surname_population, color='red', linestyle='--', label=f'전국 {surname} 성씨 인구수')
-
+        
         ax.set_ylabel('인구수')
         ax.set_xlabel('지역')
         ax.set_title(f"{surname} 성씨 전국 대비 지역별 인구수")
         ax.legend()
-
+        
         # 그래프에 레이블 추가
         for i, txt in enumerate(regions_surname_data['인구수']):
             ax.annotate(txt, (regions_surname_data['지역'][i], txt), textcoords="offset points", xytext=(0,10), ha='center')
-
+        
         # 전국 성씨 인구수 레이블 추가
-        ax.annotate(total_surname_population, (0, total_surname_population), textcoords="offset points", xytext=(0,10), ha='center', color='red')
-
+        ax.annotate(total_surname_population, (1, total_surname_population), textcoords="offset points", xytext=(-10,10), ha='center', color='red')
+        
         st.pyplot(fig)
     else:
-        st.write(f"지역 '{selected_region}'에서 성씨 '{surname}'의 데이터를 찾을 수 없습니다.")
+        st.write(f"지역 '{selected_region}' 또는 전국에서 성씨 '{surname}'의 데이터를 찾을 수 없습니다.")
 else:
     st.write("성씨를 입력하세요.")
 
