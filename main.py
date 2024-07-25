@@ -10,8 +10,6 @@ data = pd.read_excel(file_path)
 # 데이터 정리
 data.columns = ['성씨', '지역', '인구수']
 data['성씨'] = data['성씨'].fillna(method='ffill')
-
-# 인구수를 숫자로 변환
 data['인구수'] = data['인구수'].astype(int)
 
 # Streamlit 앱 제목
@@ -40,16 +38,20 @@ if surname:
         st.write(f"지역: {selected_region}, 성씨: {surname} 인구 데이터")
         st.dataframe(region_surname_data.reset_index(drop=True))
 
+        # 모든 지역에 대한 입력된 성씨의 인구수 데이터 준비
+        regions_surname_data = data[data['성씨'].str.contains(surname, na=False)].groupby('지역').sum().reset_index()
+
         # 전국 대비 해당 지역 성씨 비율 그래프 (꺾은선 그래프)
-        fig, ax = plt.subplots(figsize=(10, 6))
-        ax.plot(['전국', selected_region], [total_surname_data['인구수'].values[0], region_surname_data['인구수'].values[0]], marker='o', linestyle='-', color='blue', label='인구수')
+        fig, ax = plt.subplots(figsize=(14, 7))
+        ax.plot(regions_surname_data['지역'], regions_surname_data['인구수'], marker='o', linestyle='-', color='blue', label='인구수')
         ax.set_ylabel('인구수')
-        ax.set_title(f"{surname} 성씨 전국 대비 {selected_region} 인구수")
+        ax.set_xlabel('지역')
+        ax.set_title(f"{surname} 성씨 전국 대비 지역별 인구수")
         ax.legend()
 
         # 그래프에 레이블 추가
-        for i, txt in enumerate([total_surname_data['인구수'].values[0], region_surname_data['인구수'].values[0]]):
-            ax.annotate(txt, (['전국', selected_region][i], txt), textcoords="offset points", xytext=(0,10), ha='center')
+        for i, txt in enumerate(regions_surname_data['인구수']):
+            ax.annotate(txt, (regions_surname_data['지역'][i], txt), textcoords="offset points", xytext=(0,10), ha='center')
 
         st.pyplot(fig)
     else:
@@ -68,3 +70,19 @@ st.dataframe(bottom_5_surnames.reset_index(drop=True))
 if not surname:
     st.write(f"지역 '{selected_region}'의 모든 성씨 데이터")
     st.dataframe(region_data.reset_index(drop=True))
+
+# 입력된 성씨에 대한 전국 모든 지역별 인구수 꺾은선 그래프
+if surname and not region_surname_data.empty:
+    st.write(f"전국 대비 {surname} 성씨의 지역별 인구수 비교")
+    fig, ax = plt.subplots(figsize=(14, 7))
+    ax.plot(regions_surname_data['지역'], regions_surname_data['인구수'], marker='o', linestyle='-', color='blue', label='인구수')
+    ax.set_ylabel('인구수')
+    ax.set_xlabel('지역')
+    ax.set_title(f"{surname} 성씨 전국 대비 지역별 인구수")
+    ax.legend()
+
+    # 그래프에 레이블 추가
+    for i, txt in enumerate(regions_surname_data['인구수']):
+        ax.annotate(txt, (regions_surname_data['지역'][i], txt), textcoords="offset points", xytext=(0,10), ha='center')
+
+    st.pyplot(fig)
