@@ -12,6 +12,9 @@ data.columns = ['성씨', '지역', '인구수']
 data['성씨'] = data['성씨'].fillna(method='ffill')
 data['인구수'] = data['인구수'].astype(int)
 
+# '계'를 제외한 데이터 필터링
+data = data[data['성씨'] != '계']
+
 # Streamlit 앱 제목
 st.title('지역 및 성씨별 인구 데이터 조회')
 
@@ -22,9 +25,11 @@ selected_region = st.selectbox('지역을 선택하세요:', regions)
 # 선택한 지역에 대한 데이터 필터링
 region_data = data[data['지역'] == selected_region]
 
-# 상위 5개 성씨와 하위 5개 성씨
-top_5_surnames = region_data.nlargest(5, '인구수')
-bottom_5_surnames = region_data.nsmallest(5, '인구수')
+# 상위 5개 성씨와 하위 5개 성씨 (인덱스를 1부터 시작)
+top_5_surnames = region_data.nlargest(5, '인구수').reset_index(drop=True)
+bottom_5_surnames = region_data.nsmallest(5, '인구수').reset_index(drop=True)
+top_5_surnames.index += 1
+bottom_5_surnames.index += 1
 
 # 성씨 입력
 surname = st.text_input('성씨를 입력하세요:')
@@ -39,15 +44,17 @@ if surname:
         st.dataframe(region_surname_data.reset_index(drop=True))
 
         # 모든 지역에 대한 입력된 성씨의 인구수 데이터 준비
-        regions_surname_data = data[data['성씨'].str.contains(surname, na=False)].groupby('지역').sum().reset_index()
+        regions_surname_data = data[data['성씨'].str.contains(surname, na=False) & (data['지역'] != '전국')].groupby('지역').sum().reset_index()
+
+        # 전국의 해당 성씨 총 인구수
+        total_surname_population = total_surname_data['인구수'].values[0]
 
         # 전국 대비 해당 지역 성씨 비율 그래프 (꺾은선 그래프)
         fig, ax = plt.subplots(figsize=(14, 7))
         ax.plot(regions_surname_data['지역'], regions_surname_data['인구수'], marker='o', linestyle='-', color='blue', label='지역별 인구수')
 
-        # 전국 총 인구수 선
-        total_population = total_surname_data['인구수'].values[0]
-        ax.axhline(y=total_population, color='red', linestyle='--', label='전국 총 인구수')
+        # 전국 성씨 인구수 선
+        ax.axhline(y=total_surname_population, color='red', linestyle='--', label='전국 성씨 인구수')
 
         ax.set_ylabel('인구수')
         ax.set_xlabel('지역')
@@ -58,8 +65,8 @@ if surname:
         for i, txt in enumerate(regions_surname_data['인구수']):
             ax.annotate(txt, (regions_surname_data['지역'][i], txt), textcoords="offset points", xytext=(0,10), ha='center')
 
-        # 전국 총 인구수 레이블 추가
-        ax.annotate(total_population, (1, total_population), textcoords="offset points", xytext=(-10,10), ha='center', color='red')
+        # 전국 성씨 인구수 레이블 추가
+        ax.annotate(total_surname_population, (1, total_surname_population), textcoords="offset points", xytext=(-10,10), ha='center', color='red')
 
         st.pyplot(fig)
     else:
@@ -69,10 +76,10 @@ else:
 
 # 상위 5개 성씨와 하위 5개 성씨 출력
 st.write(f"지역 '{selected_region}'의 상위 5개 성씨")
-st.dataframe(top_5_surnames.reset_index(drop=True))
+st.dataframe(top_5_surnames)
 
 st.write(f"지역 '{selected_region}'의 하위 5개 성씨")
-st.dataframe(bottom_5_surnames.reset_index(drop=True))
+st.dataframe(bottom_5_surnames)
 
 # 특정 성씨를 입력하지 않았을 때 모든 데이터를 표시
 if not surname:
