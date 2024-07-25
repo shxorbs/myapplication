@@ -66,7 +66,7 @@ if surname:
             ax.annotate(txt, (regions_surname_data['지역'][i], txt), textcoords="offset points", xytext=(0,10), ha='center')
 
         # 전국 성씨 인구수 레이블 추가
-        ax.annotate(total_surname_population, (1, total_surname_population), textcoords="offset points", xytext=(-10,10), ha='center', color='red')
+        ax.annotate(total_surname_population, (0, total_surname_population), textcoords="offset points", xytext=(0,10), ha='center', color='red')
 
         st.pyplot(fig)
     else:
