@@ -47,7 +47,7 @@ if surname:
         regions_surname_data = data[data['성씨'].str.contains(surname, na=False) & (data['지역'] != '전국')].groupby('지역').sum().reset_index()
 
         # 전국의 해당 성씨 총 인구수
-        total_surname_population = total_surname_data['인구수'].values[0]
+        total_surname_population = total_surname_data['인구수'].sum()
 
         # 전국 대비 해당 지역 성씨 비율 그래프 (꺾은선 그래프)
         fig, ax = plt.subplots(figsize=(14, 7))
