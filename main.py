@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import koreanize_matplotlib
+
 # 데이터 로드
 file_path = '성씨ㆍ본관별_인구__시군구_20240724114945 (1).xlsx'
 data = pd.read_excel(file_path)
@@ -42,8 +43,8 @@ if surname:
 
         # 전국 대비 해당 지역 성씨 비율 그래프 (꺾은선 그래프)
         fig, ax = plt.subplots(figsize=(14, 7))
-        ax.plot(regions_surname_data['지역'], regions_surname_data['인구수'], marker='o', linestyle='-', color='blue', label=selected_region)
-        ax.axhline(y=total_surname_data['인구수'].values[0], color='red', linestyle='--', label='전국 평균')
+        ax.plot(regions_surname_data['지역'], regions_surname_data['인구수'], marker='o', linestyle='-', color='blue', label='지역별 인구수')
+        ax.axhline(y=total_surname_data['인구수'].values[0], color='red', linestyle='--', label='전국 총 인구수')
         ax.set_ylabel('인구수')
         ax.set_xlabel('지역')
         ax.set_title(f"{surname} 성씨 전국 대비 지역별 인구수")
@@ -75,8 +76,13 @@ if not surname:
 if surname and not region_surname_data.empty:
     st.write(f"전국 대비 {surname} 성씨의 지역별 인구수 비교")
     fig, ax = plt.subplots(figsize=(14, 7))
+
+    # 지역별 인구수 꺾은선 그래프
     ax.plot(regions_surname_data['지역'], regions_surname_data['인구수'], marker='o', linestyle='-', color='blue', label='지역별 인구수')
-    ax.axhline(y=total_surname_data['인구수'].values[0], color='red', linestyle='--', label='전국 평균')
+
+    # 전국 총 인구수 선
+    ax.axhline(y=total_surname_data['인구수'].values[0], color='red', linestyle='--', label='전국 총 인구수')
+
     ax.set_ylabel('인구수')
     ax.set_xlabel('지역')
     ax.set_title(f"{surname} 성씨 전국 대비 지역별 인구수")
