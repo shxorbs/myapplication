@@ -44,7 +44,11 @@ if surname:
         # 전국 대비 해당 지역 성씨 비율 그래프 (꺾은선 그래프)
         fig, ax = plt.subplots(figsize=(14, 7))
         ax.plot(regions_surname_data['지역'], regions_surname_data['인구수'], marker='o', linestyle='-', color='blue', label='지역별 인구수')
-        ax.axhline(y=total_surname_data['인구수'].values[0], color='red', linestyle='--', label='전국 총 인구수')
+
+        # 전국 총 인구수 선
+        total_population = total_surname_data['인구수'].values[0]
+        ax.axhline(y=total_population, color='red', linestyle='--', label='전국 총 인구수')
+
         ax.set_ylabel('인구수')
         ax.set_xlabel('지역')
         ax.set_title(f"{surname} 성씨 전국 대비 지역별 인구수")
@@ -53,6 +57,9 @@ if surname:
         # 그래프에 레이블 추가
         for i, txt in enumerate(regions_surname_data['인구수']):
             ax.annotate(txt, (regions_surname_data['지역'][i], txt), textcoords="offset points", xytext=(0,10), ha='center')
+
+        # 전국 총 인구수 레이블 추가
+        ax.annotate(total_population, (1, total_population), textcoords="offset points", xytext=(-10,10), ha='center', color='red')
 
         st.pyplot(fig)
     else:
@@ -71,25 +78,3 @@ st.dataframe(bottom_5_surnames.reset_index(drop=True))
 if not surname:
     st.write(f"지역 '{selected_region}'의 모든 성씨 데이터")
     st.dataframe(region_data.reset_index(drop=True))
-
-# 입력된 성씨에 대한 전국 모든 지역별 인구수 꺾은선 그래프
-if surname and not region_surname_data.empty:
-    st.write(f"전국 대비 {surname} 성씨의 지역별 인구수 비교")
-    fig, ax = plt.subplots(figsize=(14, 7))
-
-    # 지역별 인구수 꺾은선 그래프
-    ax.plot(regions_surname_data['지역'], regions_surname_data['인구수'], marker='o', linestyle='-', color='blue', label='지역별 인구수')
-
-    # 전국 총 인구수 선
-    ax.axhline(y=total_surname_data['인구수'].values[0], color='red', linestyle='--', label='전국 총 인구수')
-
-    ax.set_ylabel('인구수')
-    ax.set_xlabel('지역')
-    ax.set_title(f"{surname} 성씨 전국 대비 지역별 인구수")
-    ax.legend()
-
-    # 그래프에 레이블 추가
-    for i, txt in enumerate(regions_surname_data['인구수']):
-        ax.annotate(txt, (regions_surname_data['지역'][i], txt), textcoords="offset points", xytext=(0,10), ha='center')
-
-    st.pyplot(fig)
