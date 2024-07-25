@@ -34,10 +34,10 @@ bottom_5_surnames.index += 1
 # 성씨 입력
 surname = st.text_input('성씨를 입력하세요:')
 
-# 선택한 성씨에 대한 데이터 필터링 및 전국 대비 비율 계산
+# 선택한 성씨에 대한 데이터 필터링 및 전국 인구수 계산
 if surname:
     region_surname_data = region_data[region_data['성씨'].str.contains(surname, na=False)]
-    total_surname_data = data[data['성씨'].str.contains(surname, na=False)].groupby('성씨').sum().reset_index()
+    total_surname_data = data[data['성씨'].str.contains(surname, na=False)]
 
     if not region_surname_data.empty:
         st.write(f"지역: {selected_region}, 성씨: {surname} 인구 데이터")
@@ -54,7 +54,7 @@ if surname:
         ax.plot(regions_surname_data['지역'], regions_surname_data['인구수'], marker='o', linestyle='-', color='blue', label='지역별 인구수')
 
         # 전국 성씨 인구수 선
-        ax.axhline(y=total_surname_population, color='red', linestyle='--', label='전국 성씨 인구수')
+        ax.axhline(y=total_surname_population, color='red', linestyle='--', label=f'전국 {surname} 성씨 인구수')
 
         ax.set_ylabel('인구수')
         ax.set_xlabel('지역')
