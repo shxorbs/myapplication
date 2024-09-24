@@ -1,93 +1,79 @@
 import streamlit as st
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import koreanize_matplotlib
 
-# 데이터 로드
-file_path = '성씨ㆍ본관별_인구__시군구_20240724114945 (1).xlsx'
-data = pd.read_excel(file_path)
+# 페이지 제목
+st.title("통계 그래프 생성기")
 
-# 데이터 정리
-data.columns = ['성씨', '지역', '인구수']
-data['성씨'] = data['성씨'].fillna(method='ffill')
-data['인구수'] = data['인구수'].astype(int)
+# 변수 저장용 리스트와 딕셔너리 초기화
+variables = st.session_state.get('variables', {})
+st.session_state['variables'] = variables
 
-# '계'를 제외한 데이터 필터링
-data = data[data['성씨'] != '계']
-
-# Streamlit 앱 제목
-st.title('지역 및 성씨별 인구 데이터 조회')
-
-# 지역 선택
-regions = data['지역'].unique()
-selected_region = st.selectbox('지역을 선택하세요:', regions)
-
-# 선택한 지역에 대한 데이터 필터링
-region_data = data[data['지역'] == selected_region]
-
-# 상위 5개 성씨와 하위 5개 성씨 (인덱스를 1부터 시작)
-top_5_surnames = region_data.nlargest(5, '인구수').reset_index(drop=True)
-bottom_5_surnames = region_data.nsmallest(5, '인구수').reset_index(drop=True)
-top_5_surnames.index += 1
-bottom_5_surnames.index += 1
-
-# 성씨 입력
-surname = st.text_input('성씨를 입력하세요:')
-
-# 선택한 성씨에 대한 데이터 필터링 및 전국 인구수 계산
-if surname:
-    # 지역 데이터에서 입력한 성씨의 데이터 필터링
-    region_surname_data = region_data[region_data['성씨'].str.contains(surname, na=False)]
+# 변수를 추가하는 섹션
+with st.form("variable_form", clear_on_submit=True):
+    variable_name = st.text_input("변수 이름을 입력하세요", key='variable_name_input')
+    variable_values = st.text_area("변량을 쉼표로 구분하여 입력하세요 (예: 1, 2, 3, 4)", key='variable_values_input')
     
-    # 전국 데이터에서 입력한 성씨의 데이터 필터링
-    total_surname_data = data[data['성씨'].str.contains(surname, na=False)]
-    
-    if not region_surname_data.empty and not total_surname_data.empty:
-        st.write(f"지역: {selected_region}, 성씨: {surname} 인구 데이터")
-        st.dataframe(region_surname_data.reset_index(drop=True))
-        
-        # 모든 지역에 대한 입력된 성씨의 인구수 데이터 준비
-        regions_surname_data = total_surname_data[total_surname_data['지역'] != '전국'].groupby('지역').sum().reset_index()
-        
-        # 각 한자별 인구수를 계산하고 그래프에 추가
-        unique_chars = set(char for name in total_surname_data['성씨'] for char in name if char.isalnum())
-        fig, ax = plt.subplots(figsize=(14, 7))
-        
-        for char in unique_chars:
-            char_total_population = total_surname_data[total_surname_data['성씨'].str.contains(char, na=False)]['인구수'].sum()
-            ax.axhline(y=char_total_population, linestyle='--', label=f'전국 {char} 성씨 인구수')
-        
-        # 지역별 인구수 꺾은선 그래프 추가
-        ax.plot(regions_surname_data['지역'], regions_surname_data['인구수'], marker='o', linestyle='-', color='blue', label='지역별 인구수')
-        
-        ax.set_ylabel('인구수')
-        ax.set_xlabel('지역')
-        ax.set_title(f"{surname} 성씨 전국 대비 지역별 인구수")
-        ax.legend()
-        
-        # 그래프에 레이블 추가
-        for i, txt in enumerate(regions_surname_data['인구수']):
-            ax.annotate(txt, (regions_surname_data['지역'][i], txt), textcoords="offset points", xytext=(0,10), ha='center')
-        
-        # 각 한자별 인구수 레이블 추가
-        for char in unique_chars:
-            char_total_population = total_surname_data[total_surname_data['성씨'].str.contains(char, na=False)]['인구수'].sum()
-            ax.annotate(char_total_population, (1, char_total_population), textcoords="offset points", xytext=(-10,10), ha='center')
+    # '변수 추가' 버튼 클릭 시 변수 추가
+    if st.form_submit_button("변수 추가"):
+        if variable_name and variable_values:
+            try:
+                values_list = list(map(float, variable_values.split(',')))
+                st.session_state['variables'][variable_name] = values_list
+                st.success(f"변수 '{variable_name}'이(가) 성공적으로 추가되었습니다.")
+            except ValueError:
+                st.error("변량을 숫자로만 입력하세요.")
+        else:
+            st.error("변수 이름과 변량을 모두 입력하세요.")
 
-        st.pyplot(fig)
-    else:
-        st.write(f"지역 '{selected_region}' 또는 전국에서 성씨 '{surname}'의 데이터를 찾을 수 없습니다.")
-else:
-    st.write("성씨를 입력하세요.")
+# 추가된 변수 보여주기
+if st.session_state['variables']:
+    st.subheader("추가된 변수들:")
+    for var_name, values in st.session_state['variables'].items():
+        st.write(f"{var_name}: {values}")
 
-# 상위 5개 성씨와 하위 5개 성씨 출력
-st.write(f"지역 '{selected_region}'의 상위 5개 성씨")
-st.dataframe(top_5_surnames)
+# 그래프 색상 선택
+st.sidebar.subheader("그래프 옵션")
+graph_color = st.sidebar.color_picker("그래프 색상을 선택하세요", "#00f900")
 
-st.write(f"지역 '{selected_region}'의 하위 5개 성씨")
-st.dataframe(bottom_5_surnames)
+# 변수를 선택하는 섹션
+if st.session_state['variables']:
+    selected_variable = st.selectbox("그래프를 그릴 변수를 선택하세요", list(st.session_state['variables'].keys()))
 
-# 특정 성씨를 입력하지 않았을 때 모든 데이터를 표시
-if not surname:
-    st.write(f"지역 '{selected_region}'의 모든 성씨 데이터")
-    st.dataframe(region_data.reset_index(drop=True))
+    if selected_variable:
+        data = st.session_state['variables'][selected_variable]
+        st.write(f"선택된 변수: {selected_variable}")
+        st.write(f"변량: {data}")
+
+        # 히스토그램
+        if st.checkbox("히스토그램 보기"):
+            plt.figure(figsize=(10, 5))
+            plt.hist(data, bins=10, color=graph_color)
+            plt.title(f"{selected_variable}의 히스토그램")
+            st.pyplot(plt)
+
+        # 줄기와 잎 그림
+        if st.checkbox("줄기와 잎 그림 보기"):
+            stem_leaf_data = pd.Series(data).value_counts().sort_index()
+            st.table(stem_leaf_data)
+
+        # 도수분포 다각형
+        if st.checkbox("도수분포 다각형 보기"):
+            plt.figure(figsize=(10, 5))
+            hist, bin_edges = np.histogram(data, bins=10)
+            bin_centers = 0.5 * (bin_edges[1:] + bin_edges[:-1])
+            plt.plot(bin_centers, hist, marker='o', linestyle='-', color=graph_color)
+            plt.title(f"{selected_variable}의 도수분포 다각형")
+            st.pyplot(plt)
+
+        # 도수와 상대도수
+        if st.checkbox("도수와 상대도수"):
+            df = pd.DataFrame(data, columns=["값"])
+            freq = df["값"].value_counts().sort_index()
+            relative_freq = freq / len(df)
+            freq_df = pd.DataFrame({"도수": freq, "상대도수": relative_freq})
+            st.table(freq_df)
+
+# 주의 사항
+st.write("도수분포 다각형과 히스토그램은 모두 연속적인 데이터에 적합합니다.")
