@@ -46,20 +46,20 @@ if st.session_state['variables']:
         st.write(f"선택된 변수: {selected_variable}")
         st.write(f"변량: {data}")
 
-        # 히스토그램
-        if st.checkbox("히스토그램 보기"):
+        # 히스토그램 버튼과 실행
+        if st.button("히스토그램 보기"):
             plt.figure(figsize=(10, 5))
             plt.hist(data, bins=10, color=graph_color)
             plt.title(f"{selected_variable}의 히스토그램")
             st.pyplot(plt)
 
-        # 줄기와 잎 그림
-        if st.checkbox("줄기와 잎 그림 보기"):
+        # 줄기와 잎 그림 버튼과 실행
+        if st.button("줄기와 잎 그림 보기"):
             stem_leaf_data = pd.Series(data).value_counts().sort_index()
             st.table(stem_leaf_data)
 
-        # 도수분포 다각형
-        if st.checkbox("도수분포 다각형 보기"):
+        # 도수분포 다각형 버튼과 실행
+        if st.button("도수분포 다각형 보기"):
             plt.figure(figsize=(10, 5))
             hist, bin_edges = np.histogram(data, bins=10)
             bin_centers = 0.5 * (bin_edges[1:] + bin_edges[:-1])
@@ -67,8 +67,8 @@ if st.session_state['variables']:
             plt.title(f"{selected_variable}의 도수분포 다각형")
             st.pyplot(plt)
 
-        # 도수와 상대도수
-        if st.checkbox("도수와 상대도수"):
+        # 도수와 상대도수 버튼과 실행
+        if st.button("도수와 상대도수 보기"):
             df = pd.DataFrame(data, columns=["값"])
             freq = df["값"].value_counts().sort_index()
             relative_freq = freq / len(df)
